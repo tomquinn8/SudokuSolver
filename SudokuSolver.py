@@ -25,4 +25,21 @@ def print_puzzle(puzzle):
         if index % 3 == 2 and index + 1 < len(puzzle):
             print('| ' + '- ' * 11 + '|')
     print(chr(9492) + ' ' + '- ' * 11 + chr(9496))
+
+def print_current_status(puzzle):
+    total_squares = sum([len(row) for row in puzzle])
+    #Solved/Unsolved
+    solved = 0
+    unsolved = 0
+    for row in puzzle:
+        for column in row:
+            if column > 0:
+                solved += 1
+            else:
+                unsolved += 1
+    print(f'{total_squares} squares')
+    print(f'{solved} solved')
+    print(f'{unsolved} to be solved')
+
 print_puzzle(puzzle)
+print_current_status(puzzle)
