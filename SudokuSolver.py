@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+from time import sleep
+from os import system
+
 puzzle = [
     [7,8,0,4,0,0,1,2,0],
     [6,0,0,0,7,5,0,0,9],
@@ -13,6 +16,8 @@ puzzle = [
 ]
 
 possibilities = []
+
+puzzle_solved = False
 
 def print_puzzle(puzzle):
     print(chr(9484) + ' ' + '- ' * 11 + chr(9488))
@@ -29,6 +34,7 @@ def print_puzzle(puzzle):
     print(chr(9492) + ' ' + '- ' * 11 + chr(9496))
 
 def print_current_status(puzzle):
+    global puzzle_solved
     total_squares = sum([len(row) for row in puzzle])
     solved = 0
     unsolved = 0
@@ -41,6 +47,8 @@ def print_current_status(puzzle):
     print(f'{total_squares} squares')
     print(f'{solved} solved')
     print(f'{unsolved} to be solved')
+    if unsolved==0:
+        puzzle_solved=True
 
 def update_possibilities(puzzle):
     # Destroy and recreate the 'possibilities' list
@@ -75,7 +83,18 @@ def update_possibilities(puzzle):
                     possibilities[x][y].remove(i)
 
     # Update possibilities based on boxes
-    # TODO
+    for bx in range(3):
+        for by in range(3):
+            found = []
+            for x in range(bx * 3,(bx * 3) + 3):
+                for y in range(by * 3,(by * 3 ) + 3):
+                    if puzzle[x][y] > 0:
+                        found.append(puzzle[x][y])
+            for x in range(bx *3,bx + 3):
+                for y in range(by * 3,(by * 3) + 3):
+                    for i in found:
+                        if i in possibilities[x][y]:
+                            possibilities[x][y].remove(i)
 
 def update_puzzle():
     global puzzle
@@ -85,10 +104,11 @@ def update_puzzle():
             if len(possibilities[x][y])==1:
                 puzzle[x][y]=possibilities[x][y][0]
 
-print_puzzle(puzzle)
-print_current_status(puzzle)
-update_possibilities(puzzle)
-update_puzzle()
-print_puzzle(puzzle)
-print_current_status(puzzle)
-print(possibilities[5][1])
+
+while not puzzle_solved:
+    system('clear')
+    print_puzzle(puzzle)
+    print_current_status(puzzle)
+    update_possibilities(puzzle)
+    update_puzzle()
+    sleep(3)
