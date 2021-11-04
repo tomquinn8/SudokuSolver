@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 
-from time import sleep
-from os import system
-
 def printPuzzle(puzzle):
     print(chr(9484) + ' ' + '- ' * 11 + chr(9488))
     for index,row in enumerate(puzzle):
