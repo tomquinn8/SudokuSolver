@@ -3,23 +3,7 @@
 from time import sleep
 from os import system
 
-puzzle = [
-    [7,8,0,4,0,0,1,2,0],
-    [6,0,0,0,7,5,0,0,9],
-    [0,0,0,6,0,1,0,7,8],
-    [0,0,7,0,4,0,2,6,0],
-    [0,0,1,0,5,0,9,3,0],
-    [9,0,4,0,6,0,0,0,5],
-    [0,7,0,3,0,0,0,1,2],
-    [1,2,0,0,0,7,4,0,0],
-    [0,4,9,2,0,6,0,0,7]
-]
-
-possibilities = []
-
-puzzle_solved = False
-
-def print_puzzle(puzzle):
+def printPuzzle(puzzle):
     print(chr(9484) + ' ' + '- ' * 11 + chr(9488))
     for index,row in enumerate(puzzle):
         print('| ', end='')
@@ -33,82 +17,82 @@ def print_puzzle(puzzle):
             print('| ' + '- ' * 11 + '|')
     print(chr(9492) + ' ' + '- ' * 11 + chr(9496))
 
-def print_current_status(puzzle):
-    global puzzle_solved
-    total_squares = sum([len(row) for row in puzzle])
-    solved = 0
-    unsolved = 0
+def getPossibilities(puzzle, x, y):
+    possibilities = [i for i in range(1,10)]
+    # Remove possibilities already in row
+    in_row = [i for i in puzzle[x] if i > 0]
+    for i in in_row:
+        if i in possibilities:
+            possibilities.remove(i)
+    # Remove possibilities already in column
+    in_column = []
+    for i in range(9):
+        if puzzle[i][y] > 0:
+            in_column.append(puzzle[i][y])
+    for i in in_column:
+        if i in possibilities:
+            possibilities.remove(i)
+    # Remove possibilities already in box
+    in_box = []
+    bx = x // 3
+    by = y // 3
+    for i in range(bx * 3, (bx * 3) + 3):
+        for j in range(by * 3, (by * 3) + 3):
+            if puzzle[i][j] > 0:
+                in_box.append(puzzle[i][j])
+    for i in in_box:
+        if i in possibilities:
+            possibilities.remove(i)
+    # Return possibilities
+    return possibilities
+
+def trySubstitution(puzzle):
+    finished = False
+    x, y = 0, 0
+    while not finished:
+        if puzzle[x][y] == 0:
+            possibilities = getPossibilities(puzzle, x, y)
+            if len(possibilities) == 1:
+                puzzle[x][y] = possibilities[0]
+                x, y = 0, 0
+        if x == 8 and y == 8: 
+            finished = True
+        elif x < 8:
+            x += 1
+        else:
+            y += 1
+            x = 0
+    printPuzzle(puzzle)
+    empty_squares = 0
     for row in puzzle:
         for column in row:
-            if column > 0:
-                solved += 1
-            else:
-                unsolved += 1
-    print(f'{total_squares} squares')
-    print(f'{solved} solved')
-    print(f'{unsolved} to be solved')
-    if unsolved==0:
-        puzzle_solved=True
+            if column ==0: 
+                empty_squares +=1
+    if empty_squares == 0:
+        return True
+    else:
+        return False
 
-def update_possibilities(puzzle):
-    # Destroy and recreate the 'possibilities' list
-    global possibilities
-    possibilities = []
-    for x in range(9):
-        possibilities.append([])
-        for y in range(9):
-            possibilities[x].append([])
-            if puzzle[x][y] > 0:
-                possibilities[x][y] = [puzzle[x][y]]
-            else:
-                possibilities[x][y] = [i + 1 for i in range(9)]
-
-    # Update possibilities based on rows
-    for x, row in enumerate(puzzle):
-        found = [i for i in row if i > 0]
-        for y in range(9):
-            for i in found:
-                if i in possibilities[x][y]:
-                    possibilities[x][y].remove(i)
-
-    # Update possibilties based on columns
-    for y in range(9):
-        found = []
-        for x in range(9):
-             if puzzle[x][y] > 0:
-                found.append(puzzle[x][y])
-        for x in range(9):
-            for i in found:
-                if i in possibilities[x][y]:
-                    possibilities[x][y].remove(i)
-
-    # Update possibilities based on boxes
-    for bx in range(3):
-        for by in range(3):
-            found = []
-            for x in range(bx * 3,(bx * 3) + 3):
-                for y in range(by * 3,(by * 3 ) + 3):
-                    if puzzle[x][y] > 0:
-                        found.append(puzzle[x][y])
-            for x in range(bx *3,bx + 3):
-                for y in range(by * 3,(by * 3) + 3):
-                    for i in found:
-                        if i in possibilities[x][y]:
-                            possibilities[x][y].remove(i)
-
-def update_puzzle():
-    global puzzle
-    global possibilities
-    for x in range(9):
-        for y in range(9):
-            if len(possibilities[x][y])==1:
-                puzzle[x][y]=possibilities[x][y][0]
+def loadPuzzles(file):
+    puzzles = []
+    with open(file, 'r') as f:
+        for line in f:
+            line = [0 if c == '.' else int(c) for c in line.rstrip()]
+            puzzle = [
+                line[0:9],line[9:18],line[18:27],
+                line[27:36],line[36:45],line[45:54],
+                line[54:63],line[63:72],line[72:81]
+                ]
+            puzzles.append(puzzle)
+    return puzzles
 
 
-while not puzzle_solved:
-    system('clear')
-    print_puzzle(puzzle)
-    print_current_status(puzzle)
-    update_possibilities(puzzle)
-    update_puzzle()
-    sleep(3)
+if __name__=='__main__':
+    puzzles = loadPuzzles('puzzles.txt')
+    solved, unsolved = 0,0
+    for p in puzzles:
+        if trySubstitution(p):
+            solved += 1
+        else:
+            unsolved +=1
+        print(f'{solved} Solved. {unsolved} Unsolved.')
