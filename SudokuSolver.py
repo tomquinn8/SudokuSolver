@@ -14,6 +14,9 @@ def printPuzzle(puzzle):
             print('| ' + '- ' * 11 + '|')
     print(chr(9492) + ' ' + '- ' * 11 + chr(9496))
 
+def isValidMove(puzzle, x, y, guess):
+    return guess in getPossibilities(puzzle, x, y)
+
 def getPossibilities(puzzle, x, y):
     possibilities = [i for i in range(1,10)]
     # Remove possibilities already in row
@@ -43,7 +46,7 @@ def getPossibilities(puzzle, x, y):
     # Return possibilities
     return possibilities
 
-def trySubstitution(puzzle):
+def tryElimination(puzzle):
     finished = False
     x, y = 0, 0
     while not finished:
@@ -88,7 +91,7 @@ if __name__=='__main__':
     puzzles = loadPuzzles('puzzles.txt')
     solved, unsolved = 0,0
     for p in puzzles:
-        if trySubstitution(p):
+        if tryElimination(p):
             solved += 1
         else:
             unsolved +=1
