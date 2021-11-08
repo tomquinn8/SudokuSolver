@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import sys
+
 def printPuzzle(puzzle):
     print(chr(9484) + ' ' + '- ' * 11 + chr(9488))
     for index,row in enumerate(puzzle):
@@ -17,61 +19,122 @@ def printPuzzle(puzzle):
 def isValidMove(puzzle, x, y, guess):
     return guess in getPossibilities(puzzle, x, y)
 
-def getPossibilities(puzzle, x, y):
-    possibilities = [i for i in range(1,10)]
-    # Remove possibilities already in row
-    in_row = [i for i in puzzle[x] if i > 0]
-    for i in in_row:
-        if i in possibilities:
-            possibilities.remove(i)
-    # Remove possibilities already in column
+def getNumbersInRow(puzzle, x):
+    return [i for i in puzzle[x] if i > 0]
+
+def getNumbersInColumn(puzzle, y):
     in_column = []
     for i in range(9):
         if puzzle[i][y] > 0:
             in_column.append(puzzle[i][y])
-    for i in in_column:
-        if i in possibilities:
-            possibilities.remove(i)
-    # Remove possibilities already in box
+    return in_column
+
+def getNumbersInBox(puzzle, bx, by):
     in_box = []
-    bx = x // 3
-    by = y // 3
     for i in range(bx * 3, (bx * 3) + 3):
         for j in range(by * 3, (by * 3) + 3):
             if puzzle[i][j] > 0:
                 in_box.append(puzzle[i][j])
+    return in_box
+
+def getPossibilities(puzzle, x, y):
+    possibilities = [i for i in range(1,10)]
+    # Remove possibilities already in row
+    in_row = getNumbersInRow(puzzle, x)
+    for i in in_row:
+        if i in possibilities:
+            possibilities.remove(i)
+    # Remove possibilities already in column
+    in_column = getNumbersInColumn(puzzle, y)
+    for i in in_column:
+        if i in possibilities:
+            possibilities.remove(i)
+    # Remove possibilities already in box
+    bx = x // 3
+    by = y // 3
+    in_box = getNumbersInBox(puzzle, bx, by)
     for i in in_box:
         if i in possibilities:
             possibilities.remove(i)
     # Return possibilities
     return possibilities
 
-def tryElimination(puzzle):
-    finished = False
-    x, y = 0, 0
-    while not finished:
-        if puzzle[x][y] == 0:
-            possibilities = getPossibilities(puzzle, x, y)
-            if len(possibilities) == 1:
-                puzzle[x][y] = possibilities[0]
-                x, y = 0, 0
-        if x == 8 and y == 8: 
-            finished = True
-        elif x < 8:
-            x += 1
-        else:
-            y += 1
-            x = 0
-    printPuzzle(puzzle)
+def eliminateBoxes(puzzle):
+    for bx in range(3):
+        for by in range(3):
+            box_needs = [i for i in range(1,10) if i not in getNumbersInBox(puzzle, bx, by)]
+            for i in box_needs:
+                possible_squares = []
+                for x in range(bx * 3, (bx * 3) + 3):
+                    for y in range(by * 3, (by * 3) + 3):
+                        if puzzle[x][y] == 0 and isValidMove(puzzle, x, y, i):
+                            possible_squares.append((x, y))
+                if len(possible_squares) == 1:
+                    square = possible_squares[0]
+                    puzzle[square[0]][square[1]] = i
+                    return True
+    return False
+
+def eliminateRows(puzzle):
+    for x in range(9):
+        row_needs = [i for i in range(1,10) if i not in getNumbersInRow(puzzle, x)]
+        for i in row_needs:
+            possible_squares = []
+            for y in range(9):
+                if puzzle[x][y] == 0 and isValidMove(puzzle, x, y, i):
+                    possible_squares.append((x,y))
+            if len(possible_squares) == 1:
+                square = possible_squares[0]
+                puzzle[square[0]][square[1]] = i
+                return True
+    return False
+
+def eliminateColumns(puzzle):
+    for y in range(9):
+        column_needs = [i for i in range(1,10) if i not in getNumbersInColumn(puzzle, y)]
+        for i in column_needs:
+            possible_squares = []
+            for x in range(9):
+                if puzzle[x][y] == 0 and isValidMove(puzzle, x, y, i):
+                    possible_squares.append((x,y))
+            if len(possible_squares) == 1:
+                square = possible_squares[0]
+                puzzle[square[0]][square[1]] = i
+                return True
+    return False
+
+def eliminateSquares(puzzle):
+    for x in range(9):
+        for y in range(9):
+            if puzzle[x][y] == 0:
+                possibilities = getPossibilities(puzzle, x, y)
+                if len(possibilities) == 1:
+                    puzzle[x][y] = possibilities[0]
+                    return True
+    return False
+
+def isPuzzleSolved(puzzle):
     empty_squares = 0
     for row in puzzle:
         for column in row:
-            if column ==0: 
-                empty_squares +=1
-    if empty_squares == 0:
-        return True
-    else:
-        return False
+            if column == 0: 
+                empty_squares += 1
+    # If no empty squares left, puzzle is solved
+    return not empty_squares
+
+def tryElimination(puzzle):
+    finished = False
+    while not finished:
+        if eliminateBoxes(puzzle):
+            continue
+        if eliminateRows(puzzle):
+            continue
+        if eliminateColumns(puzzle):
+            continue
+        if eliminateSquares(puzzle):
+            continue
+        finished = True
+    return isPuzzleSolved(puzzle)
 
 def loadPuzzles(file):
     puzzles = []
@@ -86,13 +149,16 @@ def loadPuzzles(file):
             puzzles.append(puzzle)
     return puzzles
 
-
 if __name__=='__main__':
     puzzles = loadPuzzles('puzzles.txt')
-    solved, unsolved = 0,0
+    solved, unsolved = 0, 0
     for p in puzzles:
         if tryElimination(p):
             solved += 1
+            #printPuzzle(p)
         else:
             unsolved +=1
-        print(f'{solved} Solved. {unsolved} Unsolved.')
+        printPuzzle(p)
+        sys.stdout.write(f'\r{solved} Solved. {unsolved} Unsolved.\r')
+        sys.stdout.flush()
+    print(f'{solved} Solved. {unsolved} Unsolved.')
