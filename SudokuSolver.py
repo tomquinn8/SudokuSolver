@@ -114,13 +114,12 @@ def eliminateSquares(puzzle):
     return False
 
 def isPuzzleSolved(puzzle):
-    empty_squares = 0
+# If 0 is present in puzzle it isn't solved
     for row in puzzle:
         for column in row:
             if column == 0: 
-                empty_squares += 1
-    # If no empty squares left, puzzle is solved
-    return not empty_squares
+                return False
+    return True
 
 def tryElimination(puzzle):
     finished = False
