@@ -121,7 +121,7 @@ def isPuzzleSolved(puzzle):
                 return False
     return True
 
-def tryElimination(puzzle):
+def trySolve(puzzle):
     finished = False
     while not finished:
         if eliminateBoxes(puzzle):
@@ -152,7 +152,7 @@ if __name__=='__main__':
     puzzles = loadPuzzles('puzzles.txt')
     solved, unsolved = 0, 0
     for p in puzzles:
-        if tryElimination(p):
+        if trySolve(p):
             solved += 1
             #printPuzzle(p)
         else:
